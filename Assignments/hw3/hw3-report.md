@@ -73,6 +73,8 @@ Then we can implement explicit method in our program:
 
     - At last of `e_fdm` function, do `backward` for $N$ times and return the result.
 
+Codes is in the following block:
+
 ```python
 def e_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
 # precompute
