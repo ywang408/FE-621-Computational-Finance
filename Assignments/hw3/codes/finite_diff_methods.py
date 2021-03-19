@@ -130,7 +130,7 @@ def cn_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
     def backward(p):
         temp1 = np.roll(p, -1)
         temp2 = np.roll(p, -2)
-        temp3 = -p * pu - temp1 * (pm-2) - temp2 * pd
+        temp3 = -p * pu - temp1 * (pm - 2) - temp2 * pd
         p[1:-1] = temp3[0:-2]
         b = np.append(lambda_u, p[1:-1])
         b = np.append(b, lambda_l)
@@ -141,6 +141,53 @@ def cn_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
         p = backward(p)
 
     return p[Nj]
+
+
+def delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, op_type):
+    # precompute
+    dt = T / N
+    nu = r - q - sigma ** 2 / 2
+    pu = 0.5 * dt * ((sigma / dx) ** 2 + nu / dx)
+    pm = 1 - dt * (sigma / dx) ** 2 - r * dt
+    pd = 0.5 * dt * ((sigma / dx) ** 2 - nu / dx)
+
+    # stock price and payoff at maturity
+    st = np.arange(Nj, -Nj - 1, -1)
+    st = np.exp(st * dx) * S
+    p = payoff(op_type, st, K)
+
+    def backward(p):
+        temp1 = np.roll(p, -1)
+        temp2 = np.roll(p, -2)
+        temp3 = p * pu + temp1 * pm + temp2 * pd
+        p[1:-1] = temp3[0:-2]
+        if op_type == 'c':
+            p[0] = p[1] + (st[0] - st[1])
+            p[-1] = p[-2]
+        elif op_type == 'p':
+            p[0] = p[1]
+            p[-1] = p[-2] + (st[-2] - st[-1])
+
+    for i in range(N):
+        backward(p)
+
+    delta = (p[Nj+1] - p[Nj-1]) / (st[Nj+1] - st[Nj-1])
+    delta1 = (p[Nj+1] - p[Nj]) / (st[Nj+1] - st[Nj])
+    delta2 = (p[Nj] - p[Nj-1]) / (st[Nj] - st[Nj-1])
+    gamma = (delta1 - delta2) / (0.5 * (st[Nj+1] - st[Nj-1]))
+    return delta, gamma
+
+
+def vega(S, K, T, r, sigma, q, N, Nj, dx, op_type):
+    p1 = e_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
+    p2 = e_fdm(S, K, T, r, sigma+0.05, q, N, Nj, dx, op_type, 'e')
+    return (p2-p1)/0.05
+
+
+def theta(S, K, T, r, sigma, q, N, Nj, dx, op_type):
+    p1 = e_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
+    p2 = e_fdm(S, K, T+0.05, r, sigma, q, N, Nj, dx, op_type, 'e')
+    return (p2-p1)/0.05
 
 
 if __name__ == "__main__":

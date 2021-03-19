@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 from finite_diff_methods import *
-from finite_diff_iters import *
 
 # params
 S = 100
@@ -40,6 +40,16 @@ Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
 
 
 # part f
+def BS_formula(Type, S, K, T, sigma, r):
+    d1 = (np.log(S / K) + (r + sigma ** 2 / 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    if Type == 'c':
+        return norm.cdf(d1) * S - norm.cdf(d2) * K * np.exp(-r * T)
+    elif Type == 'p':
+        return K * np.exp(-r * T) * norm.cdf(-d2) - norm.cdf(-d1) * S
+    else:
+        raise TypeError("Type must be 'c' for call, 'p' for put")
+
 
 def get_iter(S, K, T, r, sigma, q, op_type, method):
     N = 50
@@ -50,26 +60,59 @@ def get_iter(S, K, T, r, sigma, q, op_type, method):
     bs_price = BS_formula(op_type, S, K, T, sigma, r, q)
     iter = 0
     while abs(fd_price - bs_price) > epsilon:
-        N += 100
+        N += 200
         dt = T / N
         dx = sigma * np.sqrt(3 * dt)
         Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
         fd_price = method(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
         bs_price = BS_formula(op_type, S, K, T, sigma, r, q)
         iter += 1
-        print(fd_price, bs_price)
     return iter
 
 
-esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
-esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
-print("step1 of explicit method is: {0}, "
-      "step2 of explicit method is: {1}".format(esc, esp))
-isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
-isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
-print("step1 of explicit method is: {0}, "
-      "step2 of explicit method is: {1}".format(isc, isp))
-csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
-csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
-print("step1 of Crank-Nicolson method is: {0}, "
-      "step2 of Crank-Nicolson method is: {1}".format(csc, csp))
+#
+# esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)*2
+# esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)*2
+# print("step1 of explicit method is: {0}, "
+#       "step2 of explicit method is: {1}".format(esc, esp))
+# isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)*2
+# isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)*2
+# print("step1 of explicit method is: {0}, "
+#       "step2 of explicit method is: {1}".format(isc, isp))
+# csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)*2
+# csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)*2
+# print("step1 of Crank-Nicolson method is: {0}, "
+#       "step2 of Crank-Nicolson method is: {1}".format(csc, csp))
+
+# # part g
+#
+# def prob(T, r, sigma, q, N, dx):
+#     dt = T / N
+#     nu = r - q - sigma ** 2 / 2
+#     pu = - 0.5 * dt * ((sigma / dx) ** 2 + nu / dx)
+#     pm = 1 + dt * (sigma / dx) ** 2 + r * dt
+#     pd = - 0.5 * dt * ((sigma / dx) ** 2 - nu / dx)
+#     return pu, pm, pd
+#
+#
+# sig = np.arange(0.05, 0.61, 0.05)
+# pu, pm, pd = prob(T, r, sig, q, N, dx)
+# plt.figure(1)
+# plt.xlabel("sigma")
+# plt.ylabel("probs")
+# plt.title("probs of implicit finite difference method")
+# plt.plot(sig, pu, label='pu')
+# plt.plot(sig, pm, label='pm')
+# # plt.plot(sig, pd, label = 'pd')
+# plt.legend()
+# plt.show()
+
+# part i
+delta, gamma = delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+vega = vega(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+theta = theta(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+
+print("delta: ", delta)
+print("gamma: ", gamma)
+print("vega: ", vega)
+print("theta: ", theta)
