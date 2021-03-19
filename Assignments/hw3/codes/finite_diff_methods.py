@@ -40,7 +40,7 @@ def e_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
     for i in range(N):
         backward(p)
 
-    return p[N]
+    return p[Nj]
 
 
 def i_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
@@ -76,20 +76,19 @@ def i_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
         lambda_l = 0
     elif op_type == 'p':
         lambda_u = 0
-        lambda_l = st[-2] - st[-1]
+        lambda_l = st[-1] - st[-2]
 
     # backward calculation
     def backward(p):
         b = np.append(lambda_u, p[1:-1])
         b = np.append(b, lambda_l)
         x = np.linalg.solve(a, b)
-        print(x.shape)
         return x
 
     for i in range(N):
         p = backward(p)
 
-    return p[N]
+    return p[Nj]
 
 
 def cn_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
@@ -125,7 +124,7 @@ def cn_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
         lambda_l = 0
     elif op_type == 'p':
         lambda_u = 0
-        lambda_l = st[-2] - st[-1]
+        lambda_l = st[-1] - st[-2]
 
     # backward calculation
     def backward(p):
@@ -141,7 +140,7 @@ def cn_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, style):
     for i in range(N):
         p = backward(p)
 
-    return p[N]
+    return p[Nj]
 
 
 if __name__ == "__main__":
