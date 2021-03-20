@@ -667,3 +667,9 @@ print(trinomial_tree_swap(S, K, T, r, sigma, 30, 2)*100 - K)
 ```
 
 ![Result of Bonus Problem 2](2021-03-14-17-43-48.png)
+
+
+
+    pu = dt/2*((sigma/dx)**2 + nu/dx)
+    pm = 1 - dt * (sigma/dx)**2 - r*dt
+    pd = dt/2*((sigma/dx)**2 - nu/dx)

@@ -403,7 +403,57 @@ def BS_formula(Type, S, K, T, sigma, r):
         raise TypeError("Type must be 'c' for call, 'p' for put")
 ```
 
-Do some slight change on previous function to record the number of iterations, use `e_fdm_step` as an example: (you can find other codes for this part [here](#Appendix)) //TODO
+Next define `get_iter` function to get the number of iterations:
+
+```python
+def get_iter(S, K, T, r, sigma, q, op_type, method):
+    N = 50
+    dt = T / N
+    dx = sigma * np.sqrt(3 * dt)
+    Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
+    fd_price = method(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
+    bs_price = BS_formula(op_type, S, K, T, sigma, r, q)
+    iter = 0
+    while abs(fd_price - bs_price) > epsilon:
+        N += 100
+        dt = T / N
+        dx = sigma * np.sqrt(3 * dt)
+        Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
+        fd_price = method(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
+        bs_price = BS_formula(op_type, S, K, T, sigma, r, q)
+        iter += 1
+    return iter
+```
+
+At last we use the function above:
+
+```python
+esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
+esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
+print("step1 of explicit method is: {0}, "
+      "step2 of explicit method is: {1}".format(esc, esp))
+isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
+isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
+print("step1 of explicit method is: {0}, "
+      "step2 of explicit method is: {1}".format(isc, isp))
+csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
+csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
+print("step1 of Crank-Nicolson method is: {0}, "
+      "step2 of Crank-Nicolson method is: {1}".format(csc, csp))
+```
+
+Result:
+
+![Result of part f](images/2021-03-19-22-03-54.png)
+
+|method |call | put|
+|---  | ---| ---|
+|EFD | 76 | 154|
+|IFD| 193 | 321|
+|CNFD| 139 | 237|
+
+From the table we can find implicit finite difference method takes the most iterations and explicit finite difference method uses the least iterations; Additionally, all three methods takes more iterations to get put price with error less than epsilon we choose.
+
 
 ### (g)
 
@@ -537,3 +587,249 @@ print("theta: ", theta)
 
 ## Problem 2
 
+### (a)
+
+1. download data, save the data to a binary file.
+
+    ```python
+    import pandas as pd
+    import numpy as np
+    import yfinance as yf
+    from implied_vol import *
+    from finite_diff_methods import *
+
+    # download
+    spy = yf.Ticker("SPY")
+    equity_data = yf.download(tickers='SPY',period='1d')
+    expiry = ['2021-04-16', '2021-05-21', '2021-06-18']
+    call = []
+    put = []
+    for date in expiry:
+        call.append(spy.option_chain(date)[0])
+        put.append(spy.option_chain(date)[1])
+
+    # save
+    pd.to_pickle(call, "./datasets/call.pkl")
+    pd.to_pickle(put, "./datasets/put.pkl")
+    pd.to_pickle(equity_data, "./datasets/equity.pkl")
+
+    ```
+
+2. Read data and choose 10 most traded options for each maturity.
+
+    ```python
+    call = pd.read_pickle("./datasets/call.pkl")
+    put = pd.read_pickle("./datasets/put.pkl")
+    equity_data = pd.read_pickle("./datasets/equity.pkl")
+
+    # clean
+    def clean(data):
+        new_data = []
+        for df,date in zip(data, expiry):
+            df['expiry'] = pd.to_datetime(date)
+            df['t2m'] = (df['expiry'] - pd.Timestamp('today')) / np.timedelta64(1, 'Y')
+            df['s0'] = equity_data.iloc[0,3]
+            df['price'] = df.bid/2 + df.ask/2
+            # choose by volume
+            df = df.sort_values(by='volume', ascending=False)
+            new_df = df.iloc[0:10].reset_index()
+            del new_df['index']
+            new_data.append(new_df)
+        return new_data
+    call = clean(call)
+    put = clean(put)
+    ```
+
+3. Use bisection method to calculate implied volatility. (codes of `get_impliedVol` are pasted from Homework 1. I have put it in the appendix, you can find it [here](#appendix))
+
+   ```python
+    # get vol
+    r = 0.07/100
+    for df in call:
+        df['vol'] = df.apply(lambda x: \
+                                get_impliedVol('c', x.s0, x.strike, x.t2m, r, x.price),axis=1)
+
+    for df in put:
+        df['vol'] = df.apply(lambda x: \
+                                get_impliedVol('c', x.s0, x.strike, x.t2m, r, x.price),axis=1)
+   ```
+
+### (b)
+
+- Define a `fd_price` function, so that it can be applied on DataFrames in pandas:
+  
+    ```python
+    def fd_price(x, epsilon, method):
+    dt = epsilon / (3 * x.vol ** 2 + 1)
+    dx = x.vol * np.sqrt(3 * dt)
+    N = int(np.ceil(x.t2m / dt))
+    Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
+    return method(x.s0, x.strike, x.t2m, r, x.vol, 0, N, Nj, dx, x.type, 'e')
+    ```
+
+- Apply the function:
+
+    ```python
+        for df1,df2 in zip(call, put):
+    df1['EFD'] = df1.apply(lambda x: 
+                           fd_price(x, epsilon, e_fdm),axis=1)
+    df1['IFD'] = df1.apply(lambda x:
+                           fd_price(x, epsilon, i_fdm),axis=1)
+    df1['CNFD'] = df1.apply(lambda x:
+                            fd_price(x, epsilon, cn_fdm),axis=1)
+    df2['EFD'] = df2.apply(lambda x:
+                           fd_price(x, epsilon, e_fdm),axis=1)
+    df2['IFD'] = df2.apply(lambda x:
+                           fd_price(x, epsilon, i_fdm),axis=1)
+    df2['CNFD'] = df2.apply(lambda x:
+                            fd_price(x, epsilon, cn_fdm),axis=1)
+    ```
+
+    All the results are presented in the table of part d. You can see it [here](#tables).
+
+### (c)
+
+The idea of part c is similar with part b:
+
+```python
+def get_greeks(x):
+    dt = epsilon / (3 * x.vol ** 2 + 1)
+    dx = x.vol * np.sqrt(3 * dt)
+    N = int(np.ceil(x.t2m / dt))
+    Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
+    delta,gamma = delta_gamma(x.s0, x.strike, x.t2m, r, x.vol, 0, N, Nj, dx, x.type)
+    vega_ = vega(x.s0, x.strike, x.t2m, r, x.vol, 0, N, Nj, dx, x.type)
+    theta_ = theta(x.s0, x.strike, x.t2m, r, x.vol, 0, N, Nj, dx, x.type)
+    return delta, gamma, vega_, theta_
+
+
+for df1,df2 in zip(call, put):
+    df1[['delta', 'gamma', 'vega', 'theta']] = \
+    df1.apply(get_greeks,axis=1, result_type="expand")
+    df2[['delta', 'gamma', 'vega', 'theta']] = \
+    df2.apply(get_greeks,axis=1, result_type="expand")
+```
+
+Table of call option maturing at 2021-04-16:
+
+
+### (d)
+
+First , save data to csv files:
+
+```python
+# save to csv
+for df1,df2 in zip(call, put):
+    path1 = './p2_csv/' + df1.iloc[0,0][0:10] + '.csv'
+    path2 = './p2_csv/' + df2.iloc[0,0][0:10] + '.csv'
+    df1.to_csv(path1, index=False)
+    df2.to_csv(path2, index=False)
+```
+
+Choose options maturing at 2021-05-21 to create the table: (other data can be found under *./codes/p2_csv/*)
+
+```python
+info = ['t2m', 'strike', 'type', 'ask', 'bid',
+       'market_price', 'vol', 'EFD', 'IFD', 'CNFD']
+data1 = call[1][info].round(4)
+data2 = put[1][info].round(4)
+data1.to_csv('./p2_csv/d_res1.csv', index=False)
+data2.to_csv('./p2_csv/d_res2.csv', index=False)
+```
+
+#### Tables
+
+Call option table:
+
+|t2m   |strike|type|ask |bid  |market_price|vol   |EFD    |IFD    |CNFD   |
+|------|------|----|----|-----|------------|------|-------|-------|-------|
+|0.1706|395.0 |c   |9.12|9.08 |9.1         |0.1704|9.1024 |9.0952 |9.0988 |
+|0.1706|397.0 |c   |7.98|7.94 |7.96        |0.1654|7.9634 |7.9567 |7.9601 |
+|0.1706|435.0 |c   |0.4 |0.38 |0.39        |0.1467|0.3908 |0.3939 |0.3923 |
+|0.1706|400.0 |c   |6.58|6.54 |6.56        |0.161 |6.5584 |6.5525 |6.5554 |
+|0.1706|424.0 |c   |0.99|0.97 |0.98        |0.1449|0.9781 |0.9804 |0.9792 |
+|0.1706|390.0 |c   |12.0|11.96|11.98       |0.1792|11.9824|11.9747|11.9786|
+|0.1706|396.0 |c   |8.56|8.52 |8.54        |0.1682|8.5364 |8.5294 |8.5329 |
+|0.1706|430.0 |c   |0.6 |0.58 |0.59        |0.1454|0.591  |0.5939 |0.5925 |
+|0.1706|405.0 |c   |4.56|4.52 |4.54        |0.1534|4.5395 |4.5355 |4.5375 |
+|0.1706|404.0 |c   |4.91|4.87 |4.89        |0.1546|4.8912 |4.8868 |4.889  |
+
+Put option table:
+
+|t2m   |strike|type|ask  |bid  |market_price|vol   |EFD    |IFD   |CNFD   |
+|------|------|----|-----|-----|------------|------|-------|------|-------|
+|0.1706|371.0 |p   |5.98 |5.94 |5.96        |0.2178|5.9633 |5.9583|5.9608 |
+|0.1706|377.0 |p   |7.2  |7.16 |7.18        |0.2049|7.1791 |7.1728|7.1759 |
+|0.1706|385.0 |p   |9.2  |9.17 |9.185       |0.1862|9.1846 |9.1771|9.1808 |
+|0.1706|349.0 |p   |3.18 |3.16 |3.17        |0.2658|3.1676 |3.1679|3.1678 |
+|0.1706|390.0 |p   |10.89|10.85|10.87       |0.1759|10.8726|10.865|10.8688|
+|0.1706|380.0 |p   |7.88 |7.86 |7.87        |0.198 |7.8671 |7.8603|7.8637 |
+|0.1706|384.0 |p   |8.87 |8.84 |8.855       |0.1878|8.8587 |8.8513|8.855  |
+|0.1706|350.0 |p   |3.27 |3.24 |3.255       |0.2635|3.2527 |3.2528|3.2528 |
+|0.1706|345.0 |p   |2.85 |2.82 |2.835       |0.2742|2.8299 |2.831 |2.8304 |
+|0.1706|375.0 |p   |6.76 |6.73 |6.745       |0.2093|6.7486 |6.7427|6.7457 |
+
+plots:
+
+//TODO
+
+## Problem 3
+
+//TODO
+`
+## Appendix
+
+Codes used to calculate implied vols:
+
+```python
+import numpy as np
+from scipy.stats import norm
+
+
+def BS_formula(Type, S, K, T, sigma, r):
+    d1 = (np.log(S / K) + (r + sigma ** 2 / 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    if Type == 'c':
+        return norm.cdf(d1) * S - norm.cdf(d2) * K * np.exp(-r * T)
+    elif Type == 'p':
+        return K * np.exp(-r * T) * norm.cdf(-d2) - norm.cdf(-d1) * S
+    else:
+        raise TypeError("Type must be 'c' for call, 'p' for put")
+
+
+def vega(S, K, T, sigma, r):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    return np.sqrt(T) * S * norm.pdf(d1)
+
+
+def newton_method(f, f_prime, x0, tol=1e-6, N=100):
+    for i in range(N):
+        x1 = x0 - f(x0) / f_prime(x0)
+        if abs(x1 - x0) < tol:
+            break
+        x0 = x1
+    return x1
+
+
+def bisection(f, a, b, tol=1e-6):
+    if f(a) == 0:
+        return a
+    elif f(b) == 0:
+        return b
+    while abs(a - b) >= tol:
+        c = (a + b) / 2
+        if f(c) == 0:
+            break
+        if f(a) * f(c) < 0:
+            b = c
+        else:
+            a = c
+    return c
+
+
+def get_impliedVol(Type, S, K, T, r, P):
+    def price_diff(sigma):
+        return BS_formula(Type, S, K, T, sigma, r) - P
+    return bisection(price_diff, 0.001, 1)
+
+```

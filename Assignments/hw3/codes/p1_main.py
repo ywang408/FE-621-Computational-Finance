@@ -60,7 +60,7 @@ def get_iter(S, K, T, r, sigma, q, op_type, method):
     bs_price = BS_formula(op_type, S, K, T, sigma, r, q)
     iter = 0
     while abs(fd_price - bs_price) > epsilon:
-        N += 200
+        N += 100
         dt = T / N
         dx = sigma * np.sqrt(3 * dt)
         Nj = int(np.ceil((2 * np.sqrt(3 * N) - 1) / 2))
@@ -70,19 +70,19 @@ def get_iter(S, K, T, r, sigma, q, op_type, method):
     return iter
 
 
-#
-# esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)*2
-# esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)*2
-# print("step1 of explicit method is: {0}, "
-#       "step2 of explicit method is: {1}".format(esc, esp))
-# isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)*2
-# isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)*2
-# print("step1 of explicit method is: {0}, "
-#       "step2 of explicit method is: {1}".format(isc, isp))
-# csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)*2
-# csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)*2
-# print("step1 of Crank-Nicolson method is: {0}, "
-#       "step2 of Crank-Nicolson method is: {1}".format(csc, csp))
+
+# esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
+# esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
+print("step1 of explicit method is: {0}, "
+      "step2 of explicit method is: {1}".format(76, 154))
+# isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
+# isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
+print("step1 of explicit method is: {0}, "
+      "step2 of explicit method is: {1}".format(193, 321))
+# csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
+# csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
+print("step1 of Crank-Nicolson method is: {0}, "
+      "step2 of Crank-Nicolson method is: {1}".format(139, 237))
 
 # # part g
 #
@@ -107,12 +107,12 @@ def get_iter(S, K, T, r, sigma, q, op_type, method):
 # plt.legend()
 # plt.show()
 
-# part i
-delta, gamma = delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-vega = vega(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-theta = theta(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-
-print("delta: ", delta)
-print("gamma: ", gamma)
-print("vega: ", vega)
-print("theta: ", theta)
+# # part i
+# delta, gamma = delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+# vega = vega(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+# theta = theta(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+#
+# print("delta: ", delta)
+# print("gamma: ", gamma)
+# print("vega: ", vega)
+# print("theta: ", theta)

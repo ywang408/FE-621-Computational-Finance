@@ -27,11 +27,25 @@ def newton_method(f, f_prime, x0, tol=1e-6, N=100):
     return x1
 
 
+def bisection(f, a, b, tol=1e-6):
+    if f(a) == 0:
+        return a
+    elif f(b) == 0:
+        return b
+    while abs(a - b) >= tol:
+        c = (a + b) / 2
+        if f(c) == 0:
+            break
+        if f(a) * f(c) < 0:
+            b = c
+        else:
+            a = c
+    return c
+
+
 def get_impliedVol(Type, S, K, T, r, P):
     def price_diff(sigma):
         return BS_formula(Type, S, K, T, sigma, r) - P
-
-    price_diff_prime = lambda x: vega(S, K, T, x, r)
-    return newton_method(price_diff, price_diff_prime, 0.5)
+    return bisection(price_diff, 0.001, 1)
 
 
