@@ -70,19 +70,18 @@ def get_iter(S, K, T, r, sigma, q, op_type, method):
     return iter
 
 
-
-# esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
-# esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
-print("step1 of explicit method is: {0}, "
-      "step2 of explicit method is: {1}".format(76, 154))
-# isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
-# isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
-print("step1 of explicit method is: {0}, "
-      "step2 of explicit method is: {1}".format(193, 321))
-# csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
-# csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
-print("step1 of Crank-Nicolson method is: {0}, "
-      "step2 of Crank-Nicolson method is: {1}".format(139, 237))
+# # esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
+# # esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
+# print("step1 of explicit method is: {0}, "
+#       "step2 of explicit method is: {1}".format(76, 154))
+# # isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
+# # isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
+# print("step1 of explicit method is: {0}, "
+#       "step2 of explicit method is: {1}".format(193, 321))
+# # csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
+# # csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
+# print("step1 of Crank-Nicolson method is: {0}, "
+#       "step2 of Crank-Nicolson method is: {1}".format(139, 237))
 
 # # part g
 #
@@ -107,12 +106,12 @@ print("step1 of Crank-Nicolson method is: {0}, "
 # plt.legend()
 # plt.show()
 
-# # part i
-# delta, gamma = delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-# vega = vega(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-# theta = theta(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-#
-# print("delta: ", delta)
-# print("gamma: ", gamma)
-# print("vega: ", vega)
-# print("theta: ", theta)
+# part i
+delta, gamma, theta = delta_gamma_theta(
+    S, K, T, r, sigma, q, N, Nj, dx, 'c')
+vega = vega(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+
+print("delta: ", delta)
+print("gamma: ", gamma)
+print("vega: ", vega)
+print("theta: ", theta)

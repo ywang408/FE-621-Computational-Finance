@@ -516,10 +516,10 @@ We can find that the result of Crank-Nicolson is just the average of explicit an
 
 ### (i)
 
-For delta and gamma, we can use the girds to calculate them directly:
+For delta, gamma and theta, we can use the girds to calculate them directly:
 
 ```python
-def delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, op_type):
+def delta_gamma_theta(S, K, T, r, sigma, q, N, Nj, dx, op_type):
     # precompute
     dt = T / N
     nu = r - q - sigma ** 2 / 2
@@ -545,36 +545,34 @@ def delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, op_type):
             p[-1] = p[-2] + (st[-2] - st[-1])
 
     for i in range(N):
+        if i == N-1:
+            p1 = p[Nj]
         backward(p)
 
     delta = (p[Nj+1] - p[Nj-1]) / (st[Nj+1] - st[Nj-1])
     delta1 = (p[Nj+1] - p[Nj]) / (st[Nj+1] - st[Nj])
     delta2 = (p[Nj] - p[Nj-1]) / (st[Nj] - st[Nj-1])
     gamma = (delta1 - delta2) / (0.5 * (st[Nj+1] - st[Nj-1]))
-    return delta, gamma
+    theta = (p1 - p[Nj])/dt
+    return delta, gamma, theta
 ```
 
-And for theta and vega, we need to apply small changes on $\sigma$ and $T$, then use the difference of prices divided by small changes:
+For vega, we need to apply small changes on $\sigma$, then use the difference of prices divided by small changes:
 
 ```python
 def vega(S, K, T, r, sigma, q, N, Nj, dx, op_type):
     p1 = e_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
     p2 = e_fdm(S, K, T, r, sigma+0.05, q, N, Nj, dx, op_type, 'e')
     return (p2-p1)/0.05
-
-
-def theta(S, K, T, r, sigma, q, N, Nj, dx, op_type):
-    p1 = e_fdm(S, K, T, r, sigma, q, N, Nj, dx, op_type, 'e')
-    p2 = e_fdm(S, K, T+0.05, r, sigma, q, N, Nj, dx, op_type, 'e')
-    return (p2-p1)/0.05
 ```
 
 Use the same parameter in part [e](#e) to calculate Greeks of call option:
 
 ```python
-delta, gamma = delta_gamma(S, K, T, r, sigma, q, N, Nj, dx, 'c')
+# part i
+delta, gamma, theta = delta_gamma_theta(
+    S, K, T, r, sigma, q, N, Nj, dx, 'c')
 vega = vega(S, K, T, r, sigma, q, N, Nj, dx, 'c')
-theta = theta(S, K, T, r, sigma, q, N, Nj, dx, 'c')
 
 print("delta: ", delta)
 print("gamma: ", gamma)
@@ -583,7 +581,7 @@ print("theta: ", theta)
 
 ```
 
-![result of part i](images/2021-03-19-02-35-47.png)
+![Result of part i](images/2021-03-22-01-34-50.png)
 
 ## Problem 2
 
