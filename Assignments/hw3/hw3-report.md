@@ -2,6 +2,7 @@
 title: FE-621 Homework3
 author: You Wang
 date: 03/18/2021
+linkcolor: blue
 ---
 
 ## Problem 1
@@ -454,7 +455,6 @@ Result:
 
 From the table we can find implicit finite difference method takes the most iterations and explicit finite difference method uses the least iterations; Additionally, all three methods takes more iterations to get put price with error less than epsilon we choose.
 
-
 ### (g)
 
 Use a `prob` function to calculate probs:
@@ -613,12 +613,13 @@ print("theta: ", theta)
 
     ```
 
-2. Read data and choose 10 most traded options for each maturity.
+2. Read data and choose options with strike from 385 to 395.
 
     ```python
     call = pd.read_pickle("./datasets/call.pkl")
     put = pd.read_pickle("./datasets/put.pkl")
     equity_data = pd.read_pickle("./datasets/equity.pkl")
+    expiry = ['2021-04-16', '2021-05-21', '2021-06-18']
 
     # clean
     def clean(data):
@@ -627,10 +628,9 @@ print("theta: ", theta)
             df['expiry'] = pd.to_datetime(date)
             df['t2m'] = (df['expiry'] - pd.Timestamp('today')) / np.timedelta64(1, 'Y')
             df['s0'] = equity_data.iloc[0,3]
-            df['price'] = df.bid/2 + df.ask/2
-            # choose by volume
-            df = df.sort_values(by='volume', ascending=False)
-            new_df = df.iloc[0:10].reset_index()
+            df['market_price'] = df.bid/2 + df.ask/2
+            # choose strike between 385 to 395
+            new_df = df.loc[df.strike.isin(np.arange(385,395))].reset_index()
             del new_df['index']
             new_data.append(new_df)
         return new_data
@@ -683,7 +683,7 @@ print("theta: ", theta)
                             fd_price(x, epsilon, cn_fdm),axis=1)
     ```
 
-    All the results are presented in the table of part d. You can see it [here](#tables).
+    Results are presented in the table of part d. You can see it [here](#tables).
 
 ### (c)
 
@@ -708,8 +708,37 @@ for df1,df2 in zip(call, put):
     df2.apply(get_greeks,axis=1, result_type="expand")
 ```
 
-Table of call option maturing at 2021-04-16:
+Table of options' greeks maturing at 2021-04-16:
 
+Call:
+
+|strike|market_price|vol   |delta |gamma |theta   |vega   |
+|------|------------|------|------|------|--------|-------|
+|385.0 |10.985      |0.1943|0.6281|0.0193|-56.3207|38.2343|
+|386.0 |10.18       |0.189 |0.6109|0.0202|-55.6071|38.7135|
+|387.0 |9.525       |0.1871|0.5914|0.0207|-55.9917|39.2471|
+|388.0 |8.725       |0.1811|0.572 |0.0216|-54.5618|39.4786|
+|389.0 |8.165       |0.1806|0.5503|0.0218|-54.8126|39.7086|
+|390.0 |7.495       |0.1769|0.5286|0.0224|-54.0501|39.9371|
+|391.0 |6.825       |0.1726|0.506 |0.0231|-53.0269|40.1168|
+|392.0 |6.205       |0.169 |0.4824|0.0235|-51.6725|39.9814|
+|393.0 |5.695       |0.1676|0.4586|0.0235|-50.9794|39.8435|
+|394.0 |5.17        |0.1652|0.4339|0.0238|-49.979 |39.7008|
+
+Put:
+
+|strike|market_price|vol   |delta  |gamma |theta   |vega   |
+|------|------------|------|-------|------|--------|-------|
+|394.0 |8.07        |0.1593|-0.5691|0.0246|-47.8872|39.6828|
+|393.0 |7.54        |0.1604|-0.544 |0.0246|-48.4817|39.8297|
+|392.0 |7.11        |0.1633|-0.5188|0.0243|-49.6521|39.9765|
+|391.0 |6.735       |0.1671|-0.4944|0.0238|-51.0491|40.1164|
+|390.0 |6.365       |0.1703|-0.471 |0.0233|-51.7628|39.9324|
+|389.0 |5.985       |0.1728|-0.4483|0.0228|-52.13  |39.6961|
+|388.0 |5.68        |0.1766|-0.4266|0.0221|-52.9115|39.4676|
+|387.0 |5.375       |0.1799|-0.4058|0.0215|-53.4248|39.1789|
+|386.0 |5.175       |0.1854|-0.3874|0.0206|-54.2052|38.6722|
+|385.0 |4.835       |0.1869|-0.3677|0.02  |-53.6883|38.1335|
 
 ### (d)
 
@@ -735,7 +764,7 @@ data1.to_csv('./p2_csv/d_res1.csv', index=False)
 data2.to_csv('./p2_csv/d_res2.csv', index=False)
 ```
 
-#### Tables
+### Tables
 
 Call option table:
 
@@ -774,7 +803,7 @@ plots:
 ## Problem 3
 
 //TODO
-`
+
 ## Appendix
 
 Codes used to calculate implied vols:
