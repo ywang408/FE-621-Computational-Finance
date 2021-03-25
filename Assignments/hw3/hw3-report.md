@@ -796,13 +796,77 @@ Put option table:
 |0.1706|345.0 |p   |2.85 |2.82 |2.835       |0.2742|2.8299 |2.831 |2.8304 |
 |0.1706|375.0 |p   |6.76 |6.73 |6.745       |0.2093|6.7486 |6.7427|6.7457 |
 
-plots:
+Choose call options maturing at 05-21 and 06-21 to plot:
 
-//TODO
+![plot of d](images/p2-part-d.png)
+
+From the table and plot, we find that $A, B, C_M$ and prices calculated by finite difference are very close. And the upper lines are the prices of options maturing at 06-21 since their time to maturity is longer.
 
 ## Problem 3
 
-//TODO
+### 1
+
+First we need to transform stock price process to return process: $x = \log S$ and choose $V(S,t) = V(e^x,t) = U(x,t)$. By applying chain rule, we have:
+
+$$
+\frac{\partial U}{\partial x}=\frac{\partial V}{\partial x}=\frac{\partial V}{\partial S} \cdot \frac{\partial S}{\partial x}=\frac{\partial V}{\partial S} \cdot e^{x}=\frac{\partial V}{\partial S} \cdot S
+$$
+
+and
+
+$$
+\begin{aligned}
+\frac{\partial^{2} U}{\partial x^{2}} &=\frac{\partial}{\partial x}\left(\frac{\partial U}{\partial x}\right) \\
+&=\frac{\partial}{\partial x}\left(\frac{\partial V}{\partial S} \cdot \frac{\partial S}{\partial x}\right) \\
+&=\frac{\partial^{2} V}{\partial S^{2}} \cdot \frac{\partial S}{\partial x} \cdot \frac{\partial S}{\partial x}+\frac{\partial V}{\partial S} \cdot \frac{\partial^{2} S}{\partial x^{2}}
+\end{aligned}
+$$
+
+Thus
+
+$$
+\frac{\partial^{2} U}{\partial x^{2}}=\frac{\partial^{2} V}{\partial S^{2}} S^{2}+\frac{\partial V}{\partial S} \cdot = \frac{\partial^{2} V}{\partial S^{2}} S^{2} + \frac{\partial V}{\partial x}
+$$
+
+Therefore the PDE in this question becomes:
+
+$$
+\frac{\partial V}{\partial t}+\frac{2 \cos (S)}{S} \frac{\partial V}{\partial x}+0.2 S^{-\frac{1}{2}}\left(\frac{\partial^{2} V}{\partial x^{2}}-\frac{\partial V}{\partial x}\right)-r V=0
+$$
+
+$$
+\frac{\partial V}{\partial t}+\left(\frac{2 \cos (S)}{S} - 0.2 S^{-\frac{1}{2}} \right) \frac{\partial V}{\partial x}+0.2 S^{-\frac{1}{2}}\frac{\partial^{2} V}{\partial x^{2}}-r V=0
+$$
+
+Use forward difference to discretize the derivatives the equation:
+
+$$
+\frac{V_{i+1,j}-V_{i, j}}{\Delta t}+a_{i,j} \frac{V_{i+1, j+1}-V_{i+1, j-1}}{2 \Delta x}+b_{i,j} \frac{V_{i+1, j+1}-2 V_{i, j}+V_{i+1, j-1}}{\Delta x^{2}}-r V_{i+1, j}=0
+$$
+
+where $a_{i,j} = \frac{2 \cos (S_{i,j})}{S_{i,j}} - 0.2 S_{i,j}^{-\frac{1}{2}}$, $b_{i,j} = 0.2 S_{i,j}^{-\frac{1}{2}}$.
+
+Rearrange the function:
+
+$$
+\begin{aligned}
+V_{i, j} &=p_{u} V_{i+1 . j+1}+p_{m} V_{i+1, j}+p_{d} V_{i+1, j-1} \\
+p_{u} &=\Delta t\left(\frac{b_{i,j}}{\Delta x^{2}}+\frac{a_{i,j}}{2 \Delta x}\right) \\
+p_{m} &=1-\Delta t \frac{2b_{i,j}}{\Delta x^{2}}-r \Delta t \\
+p_{d} &=\Delta t\left(\frac{b_{i,j}}{\Delta x^{2}}-\frac{a_{i,j}}{2 \Delta x}\right)
+\end{aligned}
+$$
+
+### 2
+
+For call option we need boundary conditions:
+
+- When $S \rightarrow \infty$: $\frac{\partial V}{\partial S}=1$
+- When $S \rightarrow 0_+$: $\frac{\partial V}{\partial S}=0$
+
+### 3
+
+From $-N_j$ to $N_j$ we have different $pu, pm, pd$ for different stock prices, but for girds at each time point, their $pu, pm, pd$ are the same correspondingly. i.e. Prob of $(i,j)$ are the same with $(i+1,j)$ for any $j$.
 
 ## Appendix
 

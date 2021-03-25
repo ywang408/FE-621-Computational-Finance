@@ -70,41 +70,41 @@ def get_iter(S, K, T, r, sigma, q, op_type, method):
     return iter
 
 
-# # esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
-# # esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
-# print("step1 of explicit method is: {0}, "
-#       "step2 of explicit method is: {1}".format(76, 154))
-# # isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
-# # isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
-# print("step1 of explicit method is: {0}, "
-#       "step2 of explicit method is: {1}".format(193, 321))
-# # csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
-# # csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
-# print("step1 of Crank-Nicolson method is: {0}, "
-#       "step2 of Crank-Nicolson method is: {1}".format(139, 237))
+esc = get_iter(S, K, T, r, sigma, q, 'c', e_fdm)
+esp = get_iter(S, K, T, r, sigma, q, 'p', e_fdm)
+print("step1 of explicit method is: {0}, "
+      "step2 of explicit method is: {1}".format(esc, esp))
+isc = get_iter(S, K, T, r, sigma, q, 'c', i_fdm)
+isp = get_iter(S, K, T, r, sigma, q, 'p', i_fdm)
+print("step1 of explicit method is: {0}, "
+      "step2 of explicit method is: {1}".format(isc, isp))
+csc = get_iter(S, K, T, r, sigma, q, 'c', cn_fdm)
+csp = get_iter(S, K, T, r, sigma, q, 'p', cn_fdm)
+print("step1 of Crank-Nicolson method is: {0}, "
+      "step2 of Crank-Nicolson method is: {1}".format(csc, csp))
 
-# # part g
-#
-# def prob(T, r, sigma, q, N, dx):
-#     dt = T / N
-#     nu = r - q - sigma ** 2 / 2
-#     pu = - 0.5 * dt * ((sigma / dx) ** 2 + nu / dx)
-#     pm = 1 + dt * (sigma / dx) ** 2 + r * dt
-#     pd = - 0.5 * dt * ((sigma / dx) ** 2 - nu / dx)
-#     return pu, pm, pd
-#
-#
-# sig = np.arange(0.05, 0.61, 0.05)
-# pu, pm, pd = prob(T, r, sig, q, N, dx)
-# plt.figure(1)
-# plt.xlabel("sigma")
-# plt.ylabel("probs")
-# plt.title("probs of implicit finite difference method")
-# plt.plot(sig, pu, label='pu')
-# plt.plot(sig, pm, label='pm')
-# # plt.plot(sig, pd, label = 'pd')
-# plt.legend()
-# plt.show()
+# part g
+
+def prob(T, r, sigma, q, N, dx):
+    dt = T / N
+    nu = r - q - sigma ** 2 / 2
+    pu = - 0.5 * dt * ((sigma / dx) ** 2 + nu / dx)
+    pm = 1 + dt * (sigma / dx) ** 2 + r * dt
+    pd = - 0.5 * dt * ((sigma / dx) ** 2 - nu / dx)
+    return pu, pm, pd
+
+
+sig = np.arange(0.05, 0.61, 0.05)
+pu, pm, pd = prob(T, r, sig, q, N, dx)
+plt.figure(1)
+plt.xlabel("sigma")
+plt.ylabel("probs")
+plt.title("probs of implicit finite difference method")
+plt.plot(sig, pu, label='pu')
+plt.plot(sig, pm, label='pm')
+plt.plot(sig, pd, label = 'pd')
+plt.legend()
+plt.show()
 
 # part i
 delta, gamma, theta = delta_gamma_theta(
@@ -115,3 +115,6 @@ print("delta: ", delta)
 print("gamma: ", gamma)
 print("vega: ", vega)
 print("theta: ", theta)
+
+# p3
+
