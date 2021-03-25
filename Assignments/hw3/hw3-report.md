@@ -373,9 +373,7 @@ print("call of Crank-Nicolson method is: {0}, "
       "put of Crank-Nicolson method is: {1}".format(cc, cp))
 ```
 
-![part e result](images/2021-03-18-21-52-18.png)
-
-From the pic we know, result of numbers in part [d](#d):
+Table of $\Delta t, \Delta x, N, N_j$:
 
 |  $\Delta t$   | $\Delta x$  | $N$ | $N_j$ |
 |  ----  | ----  | --- | --- |
@@ -443,9 +441,9 @@ print("step1 of Crank-Nicolson method is: {0}, "
       "step2 of Crank-Nicolson method is: {1}".format(csc, csp))
 ```
 
-Result:
+Note the iterations calculated in this problem is relative iterations, if the time step increases by one, the running time would be to long. So here I let time step increase by $100$, and other parameters changes correspondingly.
 
-![Result of part f](images/2021-03-19-22-03-54.png)
+Result of iterations for three methods:
 
 |method |call | put|
 |---  | ---| ---|
@@ -581,7 +579,11 @@ print("theta: ", theta)
 
 ```
 
-![Result of part i](images/2021-03-22-01-34-50.png)
+Result:
+
+|delta| gamma| vega| theta|
+|---  |---   |---  |---   |
+|$0.606$ | $0.0019$ |$37.501$|$-5.578$ |
 
 ## Problem 2
 
