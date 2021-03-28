@@ -19,8 +19,10 @@ $$
 And probability of up and down is:
 
 $$
-p_u = \frac{e^{r \Delta t - d}}{u -d} \approx 0.5 \\
-p_d = 1 - p_u =0.5
+\begin{aligned}
+    p_u = \frac{e^{r \Delta t - d}}{u -d} \approx 0.5 \\
+    p_d = 1 - p_u =0.5
+\end{aligned}
 $$
 
 For a 3 step binomial tree, its structure is as following:
@@ -33,13 +35,13 @@ In the following picture, black number is the stock price at the node, and blue 
 
 ![European put](attachments/images/Eu-put-binomial-tree.png)
 
-So its price is $4.25$.
+So its price is $4.15$.
 
 To hedge it is to calculate the Delta:
 
-$$\text{Delta} = e^{-r \Delta t}\frac{P_u - P_d}{S_u - S_d} \approx -0.36 $$
+$$\text{Delta} = e^{-r \Delta t}\frac{P_u - P_d}{S_u - S_d} \approx -0.37 $$
 
-So we need to short 0.36 shares.
+So we need to short 0.37 shares.
 
 ## Part (b)
 
@@ -47,13 +49,13 @@ In the following picture, black number is the stock price at the node, blue numb
 
 ![American put](attachments/images/Am-put-binomial-tree.png)
 
-So its price is $4.5$.
+So its price is $4.29$.
 
  calculate the Delta:
 
-$$\text{Delta} = e^{-r \Delta t}\frac{P_u - P_d}{S_u - S_d} = -0.4$$
+$$\text{Delta} = e^{-r \Delta t}\frac{P_u - P_d}{S_u - S_d} = -0.39$$
 
-So we need to short 0.4 shares.
+So we need to short 0.39 shares.
 
 ## Part (c)
 
@@ -61,13 +63,13 @@ In the following picture, black number is the stock price at the node, and blue 
 
 ![European barrier put](attachments/images/Eu-barrier-put.png)
 
-So its price is $1.5$.
+So its price is $1.42$.
 
 # Problem 2
 
 ## (a)
 
-For a 3 step trinomial tree model, $\Delta t = \frac{T}{3} = 0.75.$ Choose $\Delta x = \sigma \sqrt{3 \Delta t}$:
+For a 3 step trinomial tree model, $\Delta t = \frac{T}{3} = 0.25.$ Choose $\Delta x = \sigma \sqrt{3 \Delta t}$:
 
 $$
 \begin{aligned}
@@ -87,11 +89,11 @@ So its price is $3.59$.
 
 ## (b)
 
-Because codos from Homework 2 contains some parts about barrier option, so I put it in the appendix. (See it [here](#appendix))
+Because codes from Homework 2 contains some parts about barrier option, so I put it in the appendix. (See it [here](#appendix))
 
 ![Result of program](attachments/images/200-steps-American-Put.png)
 
-So its price is $3.59$.
+So its price is $3.90$.
 
 # Problem 3
 
@@ -119,7 +121,7 @@ $$
 Therefore the initial PDE becomes
 
 $$
-\frac{\partial V}{\partial t}+\left(\frac{\alpha(S)}{S} - \frac{\beta(S)}{S^2}\right) \frac{\partial V}{\partial S}+\frac{\beta(S)}{S^2} \frac{\partial^{2} V}{\partial S^{2}}-r V=0
+\frac{\partial V}{\partial t}+\left(\frac{\alpha(S)}{S} - \frac{\beta(S)}{S^2}\right) \frac{\partial V}{\partial x}+\frac{\beta(S)}{S^2} \frac{\partial^{2} V}{\partial x^{2}}-r V=0
 $$
 
 In this problem, $\alpha = 2 \tan(S)$, $\beta = S^3$.
@@ -127,7 +129,7 @@ In this problem, $\alpha = 2 \tan(S)$, $\beta = S^3$.
 So the PDE is
 
 $$
-\frac{\partial V}{\partial t}+\left(\frac{\tan S}{S} - S\right) \frac{\partial V}{\partial S}+S \frac{\partial^{2} V}{\partial S^{2}}-r V=0
+\frac{\partial V}{\partial t}+\left(\frac{\tan S}{S} - S\right) \frac{\partial V}{\partial x}+S \frac{\partial^{2} V}{\partial x^{2}}-r V=0
 $$
 
 ## (a) Explicit Finite difference
@@ -138,7 +140,7 @@ $$
 \frac{V_{i+1, j}-V_{i, j}}{\Delta t}+a_{i+1, j} \frac{V_{i+1, j+1}-V_{i+1, j-1}}{2 \Delta x}+b_{i+1, j} \frac{V_{i+1, j+1}-2 V_{i, j}+V_{i+1, j-1}}{\Delta x^{2}}-r V_{i+1, j}=0
 $$
 
-where $a_{i,j} = \frac{\tan(S_{i,j})}{S_{i,j}} - S_{i,j}$, $b_{i,j} = S_{i,j}$ at grid $(i,j)$.
+where $a_{i,j} = \frac{\tan(S_{i,j})}{S_{i,j}} - S_{i,j}$, $b_{i,j} = S_{i,j}$ at grid $(i,j)$. Also we know $S_{i,j} = S_0 e^{j\Delta x}$ at gird $(i,j)$.
 
 Rearrange the equation:
 
@@ -157,7 +159,7 @@ $$
 \frac{V_{i+1, j}-V_{i, j}}{\Delta t}+a_{i, j} \frac{V_{i, j+1}-V_{i, j-1}}{2 \Delta x}+b_{i, j} \frac{V_{i, j+1}-2 V_{i, j}+V_{i, j-1}}{\Delta x^{2}}-r V_{i, j}=0
 $$
 
-where $a_{i,j} = \frac{\tan(S_{i,j})}{S_{i,j}} - S_{i,j}$, $b_{i,j} = S_{i,j}$ at grid $(i,j)$.
+where $a_{i,j} = \frac{\tan(S_{i,j})}{S_{i,j}} - S_{i,j}$, $b_{i,j} = S_{i,j}$ at grid $(i,j)$. Also we know $S_{i,j} = S_0 e^{j\Delta x}$ at gird $(i,j)$.
 
 Rearrange the equation:
 
@@ -198,14 +200,29 @@ V_{i+1,-N_{j}+1} \\
 \end{array}\right]
 $$
 
+Note that in this problem, $p_u, p_m, p_d$ in the matrix $A$ are not the same, its value depends on stock price at corresponding grid.
+
+In (a) and (b), boundary condition is:
+
+call option:
+
+- When $S \rightarrow \infty$: $\frac{\partial V}{\partial S}=1$
+- When $S \rightarrow 0_+$: $\frac{\partial V}{\partial S}=0$
+  
+put option:
+
+- When $S \rightarrow \infty$: $\frac{\partial V}{\partial S}=0$
+- When $S \rightarrow 0_+$: $\frac{\partial V}{\partial S}=1$
+
 # Problem 4
 
-**(e)**, **(g)**, **(h)** are right.
+**(e)**, **(g)**, **(h)** and **bonus** are right.
 
 comment:
 
-- (e): $\log \frac{S_{i+1}}{s_i} <= \frac{S_{i+1} - S_i}{S_i}$, when $S_{i+1} = S_{i}$ they are equal. We can easily find it by let $u = \frac{S_{i+1}}{S_i}$ and define a function $f(x) = u - \log u - 1$.
-- (h): Under Q-measure we can do it.
+- **(e)**: $\log \frac{S_{i+1}}{s_i} <= \frac{S_{i+1} - S_i}{S_i}$, when $S_{i+1} = S_{i}$ they are equal. We can easily find it by let $u = \frac{S_{i+1}}{S_i}$ and define a function $f(x) = x - \log x - 1$.
+- **(h)**: Under Q-measure we can do it.
+- **bonus**: we can easily do this using Cholesky Decomposition.
 
 The others are false:
 
