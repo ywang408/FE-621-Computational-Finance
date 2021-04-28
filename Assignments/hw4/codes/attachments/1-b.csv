@@ -1,0 +1,5 @@
+,price,std,time
+No method,8.798,13.621,6.711
+Antithetic Method,8.825,7.373,9.448
+Variate Control Method,8.827,0.419,31.113
+Combined,8.828,0.397,54.598

@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.stats import norm
+import pandas as pd
+import time
 
 
 def bs_delta(S, K, T, r, q, sigma, Type):
@@ -11,14 +13,14 @@ def bs_delta(S, K, T, r, q, sigma, Type):
         return norm.cdf(d1) - 1
 
 
-def vallina_payoff(s, k, Type):
+def vanilla_payoff(s, k, Type):
     if Type == 'c':
         return np.maximum(s - k, 0)
     else:
         return np.maximum(k - s, 0)
 
 
-def vallina_mc(S, K, T, r, q, sigma, Type, n, m, reduce):
+def vanilla_mc(S, K, T, r, q, sigma, Type, n, m, reduce):
     # reduce: 0 - not apply variate reduction methods
     # 'a'-antithetic, 'c'-control variate, 'b'-both
 
@@ -36,9 +38,10 @@ def vallina_mc(S, K, T, r, q, sigma, Type, n, m, reduce):
             guassians = np.random.normal(0, 1, size=m)
             lns += nudt + sigdt * guassians
         s = np.exp(lns)
-        payoffs = vallina_payoff(s, K, Type)
+        payoffs = vanilla_payoff(s, K, Type)
         p = payoffs.mean() * np.exp(-r * T)
-        return p
+        std = payoffs.std() * np.exp(-r * T)
+        return p, std
 
     # antithetic variates
     if reduce == 'a':
@@ -50,9 +53,10 @@ def vallina_mc(S, K, T, r, q, sigma, Type, n, m, reduce):
             lns2 += nudt + sigdt * (-guassians)
         s1 = np.exp(lns1)
         s2 = np.exp(lns2)
-        payoffs = (vallina_payoff(s1, K, Type) + vallina_payoff(s2, K, Type)) / 2
+        payoffs = (vanilla_payoff(s1, K, Type) + vanilla_payoff(s2, K, Type)) / 2
         p = payoffs.mean() * np.exp(-r * T)
-        return p
+        std = payoffs.std() * np.exp(-r * T)
+        return p, std
 
     # control variate
     if reduce == 'c':
@@ -64,9 +68,10 @@ def vallina_mc(S, K, T, r, q, sigma, Type, n, m, reduce):
             s_n = s.copy() * np.exp(nudt + sigdt * guassians)
             cv += delta * (s_n - s * erddt)
             s = s_n
-        payoffs = vallina_payoff(s, K, Type) + beta*cv
+        payoffs = vanilla_payoff(s, K, Type) + beta * cv
         p = payoffs.mean() * np.exp(-r * T)
-        return p
+        std = payoffs.std() * np.exp(-r * T)
+        return p, std
 
     # apply both methods
     if reduce == 'b':
@@ -79,19 +84,66 @@ def vallina_mc(S, K, T, r, q, sigma, Type, n, m, reduce):
             delta1 = bs_delta(s1, K, T - i * dt, r, q, sigma, Type)
             delta2 = bs_delta(s2, K, T - i * dt, r, q, sigma, Type)
             s_n1 = s1.copy() * np.exp(nudt + sigdt * guassians)
-            s_n2 = s2.copy() * np.exp(nudt + sigdt * guassians)
+            s_n2 = s2.copy() * np.exp(nudt - sigdt * guassians)
             cv1 += delta1 * (s_n1 - s1 * erddt)
             cv2 += delta2 * (s_n2 - s2 * erddt)
             s1 = s_n1
             s2 = s_n2
-        payoffs = (vallina_payoff(s1, K, Type) + vallina_payoff(s2, K, Type)
-                   + beta*cv1 + beta*cv2) / 2
+        payoffs = (vanilla_payoff(s1, K, Type) + vanilla_payoff(s2, K, Type)
+                   + beta * cv1 + beta * cv2) / 2
         p = payoffs.mean() * np.exp(-r * T)
-        return p
+        std = payoffs.std() * np.exp(-r * T)
+        return p, std
 
 
 if __name__ == "__main__":
-    print(vallina_mc(100, 100, 1, 0.06, 0.03, 0.2, 'c', 100, 1000000, 0))
-    print(vallina_mc(100, 100, 1, 0.06, 0.03, 0.2, 'c', 100, 1000000, 'a'))
-    print(vallina_mc(100, 100, 1, 0.06, 0.03, 0.2, 'c', 100, 1000000, 'c'))
-    print(vallina_mc(100, 100, 1, 0.06, 0.03, 0.2, 'c', 100, 1000000, 'b'))
+    S = 100
+    K = 100
+    r = 0.03
+    q = 0.01
+    sigma = 0.2
+    T = 1
+
+    # # part b
+    # n = 300
+    # m = 1000000
+    # method = [0, 'a', 'c', 'b']
+    # res = pd.DataFrame([])
+    # for i, reduce in enumerate(method):
+    #     start = time.time()
+    #     p, std = vanilla_mc(S, K, T, r, q, sigma, 'c', n, m, reduce)
+    #     t = time.time() - start
+    #     res_tmp = pd.Series([p,std,t])
+    #     res = res.append(res_tmp, ignore_index=True)
+    # res.columns = ['price', 'std', 'time']
+    # res.index = ['No method', 'Antithetic Method', 'Variate Control Method', 'Combined']
+    # res = res.round(3)
+    # res.to_csv("../attachments/1-b.csv")
+
+    # part a
+    n = [300, 500, 700]
+    m = [1000000, 3000000, 5000000]
+    price = pd.DataFrame([])
+    std = pd.DataFrame([])
+    t = pd.DataFrame([])
+    for i in n:
+        price_ = []
+        std_ = []
+        t_ = []
+        for j in m:
+            start = time.time()
+            p_j, std_j = vanilla_mc(S, K, T, r, q, sigma, 'c', i, j, 0)
+            t_j = time.time() - start
+            price_.append(p_j)
+            std_.append(std_j)
+            t_.append(t_j)
+        price = price.append(pd.Series(price_), ignore_index=True)
+        std = std.append(pd.Series(std_), ignore_index=True)
+        t = t.append(pd.Series(t_), ignore_index=True)
+    data = [price, std, t]
+    for i, df in enumerate(data):
+        df.columns = m
+        df.index = n
+        df = df.round(3)
+        path = "../attachments/1-a-" + str(i) + ".csv"
+        df.to_csv(path)
